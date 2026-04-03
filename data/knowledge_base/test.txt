@@ -1,0 +1,7 @@
+Alyssa built a prototype AI agent backend for domain-grounded question answering.
+
+The project uses FastAPI for the API layer, Qdrant for vector retrieval, and Redis for session-based memory.
+
+The system supports retrieval-augmented generation by embedding document chunks, storing them in Qdrant, and injecting the most relevant context into the prompt before calling the language model.
+
+The assistant can preserve multi-turn context when the client reuses the same session_id across requests.

@@ -47,6 +47,7 @@ class RedisMemoryStore:
         # Create memory with the message history
         return ConversationBufferMemory(
             memory_key="history",
+            input_key="input",
             chat_memory=message_history,
             return_messages=True
         )

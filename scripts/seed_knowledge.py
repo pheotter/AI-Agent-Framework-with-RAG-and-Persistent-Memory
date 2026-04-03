@@ -67,11 +67,15 @@ def process_documents(directory: str, file_types: List[str] = None) -> List[Dict
 
             # Create document entries
             for i, chunk in enumerate(chunks):
+                file_name = os.path.basename(file_path)
+                title = file_name if len(chunks) == 1 else f"{file_name} (chunk {i + 1})"
                 document = {
                     "id": str(uuid.uuid4()),
                     "content": chunk,
                     "metadata": {
-                        "source": os.path.basename(file_path),
+                        "title": title,
+                        "content": chunk,
+                        "source": file_name,
                         "type": os.path.splitext(file_path)[1][1:],  # File extension without the dot
                         "chunk": i,
                         "path": file_path
@@ -149,6 +153,12 @@ def main():
         texts = [doc["content"] for doc in documents]
         logger.info("Generating embeddings...")
         embeddings = batch_get_embeddings(texts)
+
+        if len(embeddings) != len(documents):
+            raise RuntimeError(
+                "Failed to generate embeddings for all document chunks. "
+                "Check your model configuration, API key, and quota."
+            )
 
         # Add embeddings to documents
         for i, doc in enumerate(documents):

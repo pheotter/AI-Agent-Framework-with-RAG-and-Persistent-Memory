@@ -31,6 +31,15 @@ def mock_qdrant_service():
 
 
 @pytest.fixture
+def mock_llm_chain():
+    """Create a mock LLMChain for testing."""
+    with patch("app.core.agent.LLMChain") as mock:
+        mock_instance = mock.return_value
+        mock_instance.arun = AsyncMock(return_value="This is a test response")
+        yield mock_instance
+
+
+@pytest.fixture
 def mock_memory_store():
     """Create a mock Redis memory store for testing."""
     with patch("app.core.memory.RedisMemoryStore") as mock:
@@ -40,7 +49,7 @@ def mock_memory_store():
 
 
 @pytest.fixture
-def agent(mock_llm_service, mock_qdrant_service, mock_memory_store):
+def agent(mock_llm_service, mock_qdrant_service, mock_memory_store, mock_llm_chain):
     """Create an AI agent with mock dependencies for testing."""
     with patch("app.core.agent.QdrantService", return_value=mock_qdrant_service), patch(
         "app.core.agent.RedisMemoryStore", return_value=mock_memory_store
@@ -64,10 +73,11 @@ class TestAIAgent:
 
     @pytest.mark.asyncio
     async def test_error_handling(self, agent):
-        agent.llm.arun.side_effect = Exception("Test error")
+        with patch("app.core.agent.LLMChain") as mock_chain:
+            mock_chain.return_value.arun = AsyncMock(side_effect=Exception("Test error"))
 
-        with pytest.raises(Exception):
-            await agent.process_message("Test error message", "test_session")
+            with pytest.raises(Exception):
+                await agent.process_message("Test error message", "test_session")
 
     @pytest.mark.asyncio
     async def test_memory_interaction(self, agent):

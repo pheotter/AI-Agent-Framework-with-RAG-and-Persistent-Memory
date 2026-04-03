@@ -1,4 +1,4 @@
-from langchain.chains import ConversationChain
+from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from typing import List, Dict, Tuple
 import logging
@@ -26,6 +26,11 @@ class AIAgent:
         # Define the prompt template for the LLM
         self.prompt_template = PromptTemplate.from_template(
             '''You are a helpful AI assistant for analytics-related questions.
+
+            Use the retrieved knowledge-base context as your primary source of truth.
+            If the answer is supported by the provided context, answer concisely and cite the relevant facts.
+            If the provided context is insufficient, say that you do not have enough grounded information instead of guessing.
+            Do not introduce unrelated technologies, tools, or details that are not present in the context.
 
             Context from previous conversations:
             {history}
@@ -67,8 +72,9 @@ class AIAgent:
                 for r in filtered_results[:5]
             ])
 
-            # Create the chain
-            chain = ConversationChain(
+            # Use a generic LLM chain so we can pass both memory-backed history
+            # and the retrieved RAG context into the prompt.
+            chain = LLMChain(
                 llm=self.llm,
                 prompt=self.prompt_template,
                 memory=history

@@ -27,15 +27,16 @@ def rank_results(results: List[Dict[str, Any]],
     try:
         # Calculate relevance scores for each result
         for result in results:
+            # Qdrant already returns a similarity score for each hit.
+            result_score = result.get("score", 0.5)
+
             # Get semantic similarity if the result has an embedding
             if "embedding" in result:
                 semantic_score = cosine_similarity(query_embedding, result["embedding"])
             else:
-                # Default score for results without embeddings
-                semantic_score = 0.5
-
-            # Get the result's own relevance score if available
-            result_score = result.get("score", 0.5)
+                # If we do not have per-result embeddings, preserve the vector
+                # database score rather than biasing every hit toward 0.5.
+                semantic_score = result_score
 
             # Calculate final relevance score as weighted combination
             relevance_score = alpha * semantic_score + (1 - alpha) * result_score

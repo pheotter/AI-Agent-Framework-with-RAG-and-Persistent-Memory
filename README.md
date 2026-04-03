@@ -46,7 +46,6 @@ tests/
   test_rag.py
 docs/
   ARCHITECTURE.md            High-level architecture and request flow
-  READING_ORDER.md           Recommended file reading order for onboarding
 docker-compose.yml           Redis and Qdrant services
 ```
 
@@ -135,6 +134,20 @@ POST /chat/
 
 Use the same `session_id` across requests to preserve conversation context in Redis.
 
+## Example Demo Output
+
+After seeding the sample knowledge-base document in `data/knowledge_base/test.txt`, a prompt like:
+
+```json
+POST /chat/
+{
+  "message": "What technologies does Alyssa project use?",
+  "session_id": "fresh-session-3"
+}
+```
+
+should return a grounded answer that mentions `FastAPI`, `Qdrant`, and `Redis`, plus a non-empty `sources` list pointing back to `test.txt`.
+
 ## Testing
 
 Run unit tests with:
@@ -144,3 +157,9 @@ python -m pytest
 ```
 
 Tests use mocks for Redis, Qdrant, and model calls, so they are mainly intended to validate control flow rather than full end-to-end behavior.
+
+## Demo Tips
+
+- Use a fresh `session_id` when testing retrieval changes so older chat history does not affect the result.
+- Re-run `python scripts/seed_knowledge.py --dir data/knowledge_base` after changing knowledge-base documents.
+- Restart `uvicorn` after editing application code.

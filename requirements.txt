@@ -6,6 +6,7 @@ python-dotenv==1.0.0
 # LangChain
 langchain==0.0.335
 openai==1.2.4
+tiktoken==0.5.1
 
 # Memory storage
 redis==5.0.1
