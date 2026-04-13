@@ -55,20 +55,24 @@ class RedisMemoryStore:
     def add_interaction(self, session_id: str, user_message: str, ai_response: str) -> None:
         """Add a user-AI interaction to the history
 
-        This is typically handled automatically by the RedisChatMessageHistory
-        when used with the ConversationChain, but we keep this method
-        for explicit memory operations if needed.
+        When a chain is configured with the ConversationBufferMemory returned
+        by get_history(), LangChain typically persists the turn automatically,
+        including when using LLMChain. This method is only for explicit,
+        manual writes when a caller is not relying on chain-managed memory.
 
         Args:
             session_id: Session identifier
             user_message: User's message
             ai_response: AI's response
         """
-        key = f"chat_history:{session_id}"
-
-        # Store as messages in Redis
-        history_length = self.redis_client.llen(key)
-        logger.debug(f"Current history length for {session_id}: {history_length}")
+        message_history = RedisChatMessageHistory(
+            session_id=session_id,
+            url=f"redis://{':' + REDIS_PASSWORD + '@' if REDIS_PASSWORD else ''}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+            key_prefix="chat_history:"
+        )
+        message_history.add_user_message(user_message)
+        message_history.add_ai_message(ai_response)
+        logger.debug(f"Added manual interaction for session {session_id}")
 
     def clear_history(self, session_id: str) -> None:
         """Clear conversation history for a session

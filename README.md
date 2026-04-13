@@ -139,14 +139,15 @@ Use the same `session_id` across requests to preserve conversation context in Re
 After seeding the sample knowledge-base document in `data/knowledge_base/test.txt`, a prompt like:
 
 ```json
-POST /chat/
-{
-  "message": "What technologies does Alyssa project use?",
-  "session_id": "fresh-session-3"
-}
+curl -X POST http://127.0.0.1:8000/chat/ -H "Content-Type: application/json" -d '{"message":"What technologies does Alyssa project use?","session_id":"session_1"}'
 ```
 
 should return a grounded answer that mentions `FastAPI`, `Qdrant`, and `Redis`, plus a non-empty `sources` list pointing back to `test.txt`.
+
+```json
+curl -X DELETE http://127.0.0.1:8000/chat/delete/session_1
+```
+
 
 ## Testing
 

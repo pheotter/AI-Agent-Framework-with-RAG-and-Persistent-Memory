@@ -8,14 +8,14 @@ from app.services.llm_service import LLMService
 
 @pytest.fixture
 def test_client():
-    """Create a FastAPI test client."""
+    """Create a synchronous FastAPI test client for route tests."""
     return TestClient(app)
 
 
 @pytest.fixture
 def mock_ai_agent():
-    """Create a mock AI agent for testing."""
-    with patch("app.core.agent.AIAgent") as mock:
+    """Create a fake AI agent instance returned by the route layer."""
+    with patch("app.routes.chat.AIAgent") as mock:
         mock_instance = mock.return_value
         mock_instance.process_message = AsyncMock(
             return_value=(
@@ -30,19 +30,18 @@ def mock_ai_agent():
 
 @pytest.fixture
 def mock_llm_service():
-    """Create a mock LLM service for testing."""
-    with patch("app.services.llm_service.get_llm_service") as mock:
+    """Create a fake dependency-injected LLM service."""
+    with patch("app.routes.chat.get_llm_service") as mock:
         mock.return_value = MagicMock(spec=LLMService)
         yield mock.return_value
 
 
 class TestChatEndpoints:
-    """Test suite for chat endpoints."""
+    """Tests for the FastAPI chat routes."""
 
     @patch("app.routes.chat.AIAgent")
-    async def test_chat_endpoint(
-        self, mock_agent_class, test_client, mock_ai_agent, mock_llm_service
-    ):
+    def test_chat_endpoint(self, mock_agent_class, test_client, mock_ai_agent, mock_llm_service):
+        """POST /chat/ should call the agent and serialize the result."""
         mock_agent_class.return_value = mock_ai_agent
 
         response = test_client.post(
@@ -61,9 +60,12 @@ class TestChatEndpoints:
         )
 
     @patch("app.routes.chat.AIAgent")
-    async def test_clear_chat_history_endpoint(
-        self, mock_agent_class, test_client, mock_ai_agent
+    @patch("app.routes.chat.get_llm_service")
+    def test_clear_chat_history_endpoint(
+        self, mock_get_llm_service, mock_agent_class, test_client, mock_ai_agent
     ):
+        """DELETE /chat/{session_id} should clear the stored chat history."""
+        mock_get_llm_service.return_value = MagicMock(spec=LLMService)
         mock_agent_class.return_value = mock_ai_agent
 
         response = test_client.delete("/chat/test_session")

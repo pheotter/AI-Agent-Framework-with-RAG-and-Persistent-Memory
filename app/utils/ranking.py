@@ -30,7 +30,7 @@ def rank_results(results: List[Dict[str, Any]],
             # Qdrant already returns a similarity score for each hit.
             result_score = result.get("score", 0.5)
 
-            # Get semantic similarity if the result has an embedding
+            # Get semantic similarity if the result has an embedding (for other sources like Google search)
             if "embedding" in result:
                 semantic_score = cosine_similarity(query_embedding, result["embedding"])
             else:

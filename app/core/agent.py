@@ -6,7 +6,7 @@ import logging
 from app.core.memory import RedisMemoryStore
 from app.services.qdrant_service import QdrantService
 from app.utils.embeddings import get_embedding
-from app.utils.ranking import rank_results, filter_results
+from app.utils.ranking import rank_results, deduplicate_results, filter_results
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +62,10 @@ class AIAgent:
             # Retrieve relevant context from vector store (RAG)
             rag_results = self.qdrant_service.search(embedding)
 
-            # Rank and filter retrieved documents before passing them to the LLM
+            # Rank, deduplicate, and filter retrieved documents before passing them to the LLM
             ranked_results = rank_results(rag_results, embedding)
-            filtered_results = filter_results(ranked_results)
+            deduplicated_results = deduplicate_results(ranked_results)
+            filtered_results = filter_results(deduplicated_results)
 
             # Build context string from top results
             context = "\n\n".join([
@@ -92,9 +93,6 @@ class AIAgent:
                 }
                 for r in filtered_results[:5]
             ]
-
-            # Store the interaction in memory
-            self.memory_store.add_interaction(session_id, message, response)
 
             return response, sources
 

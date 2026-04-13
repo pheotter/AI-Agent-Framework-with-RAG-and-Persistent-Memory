@@ -96,7 +96,7 @@ def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
         vec1, vec2: Vectors to compare
 
     Returns:
-        Similarity score between 0 and 1
+        Similarity score between -1 and 1
     """
     if not vec1 or not vec2:
         return 0.0
